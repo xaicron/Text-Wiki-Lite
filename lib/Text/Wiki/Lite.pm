@@ -80,12 +80,27 @@ LOOP:
             }
         }
         if ($block && $block->{between}) {
-            $line = $block->between($line, $current_stash, sub {
-                my $line = shift;
-                (undef, my $ret) = $parent_block->end($line, $parent_stash);
-                $current_stash->{NEXT_LINE} = $line if $ret;
-                $ret;
-            });
+            my $ret;
+            if ($block->is_default) {
+                for my $key (keys %$blocks) {
+                    (undef, $ret) = $blocks->{$key}->start($line, {});
+                    last if $ret;
+                }
+                if ($ret) {
+                    $block->between($line, $current_stash, sub {
+                        $current_stash->{NEXT_LINE} = $line;
+                        1;
+                    });
+                }
+            }
+            unless ($ret) {
+                $line = $block->between($line, $current_stash, sub {
+                    my $line = shift;
+                    (undef, my $ret) = $parent_block->end($line, $parent_stash);
+                    $current_stash->{NEXT_LINE} = $line if $ret;
+                    $ret;
+                });
+            }
         }
 ENDBLOCK:
         if ($block) {
