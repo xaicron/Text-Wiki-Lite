@@ -53,11 +53,18 @@ LOOP:
                 ($line, my $ret) = $block->start($line, $current_stash);
                 if ($ret) {
                     if ($current_state && $current_block->enabled_nest) {
-                        $parent_block = $current_block;
+                        ($parent_block, $current_block) = ($current_block, $block);
                         push @$nested_states, [$current_state, $current_stash];
                     }
                     $current_state = $key;
-                    goto LAST if $block->foldline;
+                    if ($block->foldline) {
+                        if ($block->enabled_inline) {
+                            for my $key (keys %$inlines) {
+                                $line = $inlines->{$key}->parse($line);
+                            }
+                        }
+                        goto LAST
+                    }
                     last;
                 }
             }
