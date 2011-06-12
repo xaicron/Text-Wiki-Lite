@@ -32,17 +32,17 @@ sub format {
     my $nested_states = [];
     my $parent_block;
     my $parent_stash = {};
-    my $out = Text::Wiki::Lite::Output->new;
+    $self->{out} = my $out = Text::Wiki::Lite::Output->new;
     for my $line (split(/\n/, $text), $new_line) {
 #        for my $filter (@$filters) { ... }
 LOOP:
         my $current_block = $blocks->{$current_state || ''};
-        if (!defined $current_state || $current_block && $current_block->enabled_nest) {
+        if (!defined $current_state || $current_block && $current_block->nest) {
             for my $key ((keys %$blocks), $self->default_block) {
                 my $block = ref $key ? $key : $blocks->{$key};
                 next unless $block;
                 if ($current_block && $block->is_default) {
-                    next unless $current_block->enabled_default_block;
+                    next unless $current_block->default_block;
                     ($line, my $ret) = $current_block->end($line, $current_stash);
                     goto ENDBLOCK if $ret;
                 }
@@ -52,13 +52,13 @@ LOOP:
                 $current_stash = {};
                 ($line, my $ret) = $block->start($line, $current_stash);
                 if ($ret) {
-                    if ($current_state && $current_block->enabled_nest) {
+                    if ($current_state && $current_block->nest) {
                         ($parent_block, $current_block) = ($current_block, $block);
                         push @$nested_states, [$current_state, $current_stash];
                     }
                     $current_state = $key;
                     if ($block->foldline) {
-                        if ($block->enabled_inline) {
+                        if ($block->inline) {
                             for my $key (keys %$inlines) {
                                 $line = $inlines->{$key}->parse($line);
                             }
@@ -71,10 +71,10 @@ LOOP:
         }
 
         my $block = ref $current_state ? $current_state : $blocks->{$current_state || ''} || undef;
-        if ($block && $block->enabled_escape) {
+        if ($block && $block->escape) {
             $line = $self->escape_func->($line);
         }
-        if (($block && $block->enabled_inline) || !$current_state) {
+        if (($block && $block->inline) || !$current_state) {
             for my $key (keys %$inlines) {
                 $line = $inlines->{$key}->parse($line);
             }

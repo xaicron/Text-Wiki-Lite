@@ -23,24 +23,24 @@ sub end {
     $self->{end}->($line, @args);
 }
 
-sub enabled_inline {
-    shift->{enabled_inline};
+sub inline {
+    shift->{inline};
 }
 
-sub enabled_escape {
-    shift->{enabled_escape};
+sub escape {
+    shift->{escape};
 }
 
-sub enabled_nest {
-    shift->{enabled_nest};
+sub nest {
+    shift->{nest};
 }
 
 sub foldline {
     shift->{foldline};
 }
 
-sub enabled_default_block {
-    shift->{enabled_default_block};
+sub default_block {
+    shift->{default_block};
 }
 
 sub merge_pre {
