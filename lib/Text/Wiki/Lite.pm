@@ -128,6 +128,8 @@ ENDBLOCK:
     return $out->join("\n");
 }
 
+sub out { shift->{out} }
+
 sub add_filter {
     my ($self, $filter) = @_;
     push @{$self->{filters}}, $filter;
