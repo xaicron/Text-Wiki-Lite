@@ -96,6 +96,7 @@ LOOP:
             unless ($ret) {
                 $line = $block->between($line, $current_stash, sub {
                     my $line = shift;
+                    return unless $parent_block;
                     (undef, my $ret) = $parent_block->end($line, $parent_stash);
                     $current_stash->{NEXT_LINE} = $line if $ret;
                     $ret;
