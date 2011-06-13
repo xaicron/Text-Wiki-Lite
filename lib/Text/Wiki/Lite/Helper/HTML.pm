@@ -13,11 +13,20 @@ our @EXPORT = qw(
 );
 
 sub inline {
-    my ($syntax, $tag) = @_;
-    $syntax = _syntax($syntax);
+    my ($syntax, $tag, $cb) = @_;
+    $cb ||= sub { $_[0] };
+
+    my ($start_syntax, $end_syntax);
+    if (ref $syntax eq 'ARRAY') {
+        ($start_syntax, $end_syntax) = map _syntax($_), @$syntax;
+    }
+    else {
+        $start_syntax = $end_syntax = _syntax($syntax);
+    }
+
     return sub {
         my $line = shift;
-        $line =~ s#$syntax((?:(?!$syntax).)*)$syntax#<$tag>$1</$tag>#g;
+        $line =~ s#$start_syntax((?:(?!$end_syntax).)*)$end_syntax#sprintf '<%s>%s</%1$s>', $tag, $cb->($1)#ge;
         return $line;
     };
 }
