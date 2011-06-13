@@ -101,9 +101,9 @@ sub table_block {
         foldline => 1,
     };
 
-    my $hr_syntax;
+    my $th_syntax;
     if (ref $syntax eq 'ARRAY') {
-        ($syntax, $hr_syntax) = map _syntax($_), @$syntax;
+        ($syntax, $th_syntax) = map _syntax($_), @$syntax;
     }
     else {
         $syntax = _syntax($syntax);
@@ -118,7 +118,7 @@ sub table_block {
                     my $matched = $1;
                     $matched =~ s/^\s+|\s+$//g;
                     my $result;
-                    if ($hr_syntax && $matched =~ s/^$hr_syntax//) {
+                    if ($th_syntax && $matched =~ s/^$th_syntax//) {
                         $result = "<th>$matched</th>";
                     }
                     else {
