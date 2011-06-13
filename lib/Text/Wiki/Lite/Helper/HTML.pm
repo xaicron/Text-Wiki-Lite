@@ -167,21 +167,16 @@ sub list_block {
     my @regexp;
     for (my $i = 0; $i < @$syntax; $i += 2) {
         my $regex = _syntax($syntax->[$i]);
-        $start_tag_map->{$regex} = $syntax->[$i+1];
         push @regexp, $regex;
+        $start_tag_map->{$regex} = $syntax->[$i+1];
     }
     $syntax = join '|', @regexp;
 
     my $find_start_tag = sub {
         my $matched = shift;
-        my $start_tag;
         for my $key (keys %$start_tag_map) {
-            if ($matched =~ m#^$key$#) {
-                $start_tag = $start_tag_map->{$key};
-                last;
-            }
+            return $start_tag_map->{$key} if $matched =~ m#^$key$#;
         }
-        return $start_tag;
     };
 
     return {
