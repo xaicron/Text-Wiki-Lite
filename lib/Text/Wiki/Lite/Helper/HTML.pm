@@ -4,9 +4,11 @@ use strict;
 use warnings;
 use parent 'Exporter';
 use Carp qw/croak/;
+use HTML::Entities qw/encode_entities/;
 
 our @EXPORT = qw(
-    inline simple_block line_block hr_block
+    inline inline_link
+    simple_block line_block hr_block
     table_block list_block default_block
 );
 
@@ -17,6 +19,49 @@ sub inline {
         my $line = shift;
         $line =~ s#$syntax((?:(?!$syntax).)*)$syntax#<$tag>$1</$tag>#g;
         return $line;
+    };
+}
+
+sub inline_link {
+    my ($syntax) = @_;
+
+    my $rule_map = {};
+    my @rules;
+    for (my $i = 0; $i < @$syntax; $i += 2) {
+        my $regex = _syntax($syntax->[$i]);
+        push @rules, $regex;
+        $rule_map->{quotemeta $regex} = $syntax->[$i+1];
+    }
+    $syntax = do {
+        my $re = join '|', map {
+            my $re = $_;
+            $re =~ s/(?<!\\)\((?!\?)/(?:/g; # disalbed capture
+            $re;
+        } @rules;
+        qr/($re)/;
+    };
+
+    my $find_rule = sub {
+        my $matched = shift;
+        for my $key (keys %$rule_map) {
+            return $rule_map->{$key} if $matched =~ m#^$key$#;
+        }
+    };
+
+    return sub {
+        my $line = shift;
+        my @ret;
+        for my $token (split $syntax, $line) {
+            for my $rule (@rules) {
+                if (my @matches = $token =~ /$rule/) {
+                    push @ret, $find_rule->($rule)->(map encode_entities($_), @matches);
+                    goto NEXT_TOKEN;
+                }
+            }
+            push @ret, $token;
+            NEXT_TOKEN:
+        }
+        return join '', @ret;
     };
 }
 
