@@ -7,7 +7,7 @@ use Carp qw/croak/;
 use HTML::Entities qw/encode_entities/;
 
 our @EXPORT = qw(
-    inline inline_link
+    inline inline_exclusive 
     simple_block line_block hr_block
     table_block list_block default_block
 );
@@ -31,7 +31,7 @@ sub inline {
     };
 }
 
-sub inline_link {
+sub inline_exclusive {
     my ($syntax) = @_;
 
     my $rule_map = {};
