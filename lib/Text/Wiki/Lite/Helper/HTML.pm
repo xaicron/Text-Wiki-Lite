@@ -39,7 +39,12 @@ sub inline_link {
     for (my $i = 0; $i < @$syntax; $i += 2) {
         my $regex = _syntax($syntax->[$i]);
         push @rules, $regex;
-        $rule_map->{quotemeta $regex} = $syntax->[$i+1];
+        my $callback = $syntax->[$i+1];
+        unless (ref $callback eq 'CODE') {
+            my $format = $callback;
+            $callback = sub { sprintf $format, @_ };
+        }
+        $rule_map->{quotemeta $regex} = $callback;
     }
     $syntax = do {
         my $re = join '|', map {
