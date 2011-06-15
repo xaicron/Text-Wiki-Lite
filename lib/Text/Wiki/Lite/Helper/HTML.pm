@@ -68,7 +68,7 @@ sub inline_exclusive {
         for my $token (split $syntax, $line) {
             for my $rule (@rules) {
                 if (my @matches = $token =~ /$rule/) {
-                    push @ret, $find_rule->($rule)->(map encode_entities($_), @matches);
+                    push @ret, $find_rule->($rule)->(map encode_entities($_, q|'"<>&|), @matches);
                     goto NEXT_TOKEN;
                 }
             }
