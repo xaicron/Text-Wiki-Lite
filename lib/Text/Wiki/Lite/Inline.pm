@@ -4,8 +4,15 @@ use strict;
 use warnings;
 
 sub new {
-    my ($class, $code) = @_;
-    bless +{ code => $code }, $class;
+    my ($class, $ident, $code) = @_;
+    bless +{
+        ident => $ident,
+        code  => $code,
+    }, $class;
+}
+
+sub ident {
+    shift->{ident};
 }
 
 sub parse {

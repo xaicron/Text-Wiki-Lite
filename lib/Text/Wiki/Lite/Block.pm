@@ -23,6 +23,10 @@ sub end {
     $self->{end}->($line, @args);
 }
 
+sub ident {
+    shift->{ident};
+}
+
 sub inline {
     shift->{inline};
 }

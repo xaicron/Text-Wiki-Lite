@@ -2,7 +2,7 @@ use inc::Module::Install;
 name 'Text-Wiki-Lite';
 all_from 'lib/Text/Wiki/Lite.pm';
 
-#requires '';
+requires 'Class::Accessor::Lite';
 
 #build_requires '';
 test_requires 'Test::More', 0.96;
