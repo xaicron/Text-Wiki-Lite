@@ -25,7 +25,7 @@ sub inline {
     }
 
     return sub {
-        my $line = shift;
+        my ($c, $line) = @_;
         $line =~ s#$start_syntax((?:(?!$end_syntax).)*)$end_syntax#sprintf '<%s>%s</%1$s>', $tag, $cb->($1)#ge;
         return $line;
     };
@@ -63,7 +63,7 @@ sub inline_exclusive {
     };
 
     return sub {
-        my $line = shift;
+        my ($c, $line) = @_;
         my @ret;
         for my $token (split $syntax, $line) {
             for my $rule (@rules) {
@@ -92,12 +92,12 @@ sub simple_block {
 
     return +{
         start => sub {
-            my $line = shift;
+            my ($c, $line) = @_;
             my $ret = $line =~ s#^$start$#$start_tag# ? 1 : 0;
             return $line, $ret;
         },
         end => sub {
-            my $line = shift;
+            my ($c, $line) = @_;
             my $ret = $line =~ s#^$end$#$end_tag# ? 1 : 0;
             return $line, $ret;
         },
@@ -127,12 +127,13 @@ sub line_block {
 
     return {
         start => sub {
-            my $line = shift;
+            my ($c, $line) = @_;
             my $ret = $match->($line);
             return $line, $ret;
         },
         end => sub {
-            return $_[0], 1;
+            my ($c, $line) = @_;
+            return $line, 1;
         },
         %{ $opts || {} },
     };
@@ -143,12 +144,13 @@ sub hr_block {
     $syntax = _syntax($syntax);
     return {
         start => sub {
-            my $line = shift;
+            my ($c, $line) = @_;
             my $ret = $line =~ s#^$syntax$#$tag# ? 1 : 0;
             return $line, $ret;
         },
         end => sub {
-            return $_[0], 1;
+            my ($c, $line) = @_;
+            return $line, 1;
         },
     };
 }
@@ -170,7 +172,7 @@ sub table_block {
 
     return {
         start => sub {
-            my ($line, $stash) = @_;
+            my ($c, $line, $stash) = @_;
             my $ret;
             if ($line =~ s/^($syntax.*)$syntax$/$1/) {
                 $line =~ s#$syntax((?:(?!$syntax).)*)#
@@ -191,7 +193,7 @@ sub table_block {
             return $line, $ret;
         },
         between => sub {
-            my ($line, $stash, $parent_cb) = @_;
+            my ($c, $line, $stash) = @_;
             if ($line =~ s/^($syntax.*)$syntax$/$1/) {
                 $line =~ s#$syntax\s*((?:(?!$syntax).)*)\s*#
                     my $matched = $1;
@@ -201,7 +203,7 @@ sub table_block {
                 $line = "<tr>\n$line</tr>";
                 $stash->{finished} = 0;
             }
-            elsif ($parent_cb->($line)) {
+            elsif ($c->parent_cb->($line)) {
                 $stash->{finished} = 1;
             }
             else {
@@ -210,7 +212,7 @@ sub table_block {
             return $line;
         },
         end => sub {
-            my ($line, $stash) = @_;
+            my ($c, $line, $stash) = @_;
             my $ret = $stash->{finished} ? 1 : 0;
             $line = '</table>' if $ret;
             return $line, $ret;
@@ -240,7 +242,7 @@ sub list_block {
 
     return {
         start => sub {
-            my ($line, $stash) = @_;
+            my ($c, $line, $stash) = @_;
             my $ret;
             if ($line =~ s/^(\s*)($syntax) (.*)/$3/) {
                 $stash->{indent} = length $1 || 0;
@@ -251,7 +253,7 @@ sub list_block {
             return $line, $ret;
         },
         between => sub {
-            my ($line, $stash) = @_;
+            my ($c, $line, $stash) = @_;
             if ($line =~ /^(\s*)($syntax) (.*)/) {
                 my $current_indent = length $1 || 0;
                 my $start_tag = $find_start_tag->($2);
@@ -287,7 +289,7 @@ sub list_block {
             return $line;
         },
         end => sub {
-            my ($line, $stash) = @_;
+            my ($c, $line, $stash) = @_;
             my $ret = 0;
             if ($stash->{finished}) {
                 my @end_tags = ($stash->{start_tag});
@@ -313,7 +315,7 @@ sub default_block {
 
     return {
         start => sub {
-            my ($line, $stash) = @_;
+            my ($c, $line, $stash) = @_;
             my $ret = 0;
             unless ($line =~ /^\s*$/) {
                 $line = "$start_tag\n$line";
@@ -323,7 +325,7 @@ sub default_block {
             return $line, $ret;
         },
         between => sub {
-            my ($line, $stash, $parent_cb) = @_;
+            my ($c, $line, $stash) = @_;
             if ($stash->{first}) {
                 delete $stash->{first};
             }
@@ -331,7 +333,7 @@ sub default_block {
                 $stash->{finished} = 1;
             }
             else {
-                if ($parent_cb->($line)) {
+                if ($c->parent_cb->($line)) {
                     $stash->{finished} = 1;
                 }
                 elsif ($line_break) {
@@ -341,7 +343,7 @@ sub default_block {
             return $line;
         },
         end => sub {
-            my ($line, $stash) = @_;
+            my ($c, $line, $stash) = @_;
             my $ret;
             if ($stash->{finished}) {
                 $line = "$end_tag";
