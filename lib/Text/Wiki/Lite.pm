@@ -137,12 +137,12 @@ ENDBLOCK:
                 if (@$nested_states) {
                     ($current_state, $current_stash) = @{pop @$nested_states};
                 }
-                if (defined $current_stash->{NEXT_LINE}) {
+                if (defined $current_stash->{__NEXT_LINE__}) {
                     if ($block->merge_pre) {
                         $line = $out->pop.$line;
                     }
                     $out->push($line);
-                    $line = $current_stash->{NEXT_LINE};
+                    $line = $current_stash->{__NEXT_LINE__};
                     goto LOOP;
                 }
             }
