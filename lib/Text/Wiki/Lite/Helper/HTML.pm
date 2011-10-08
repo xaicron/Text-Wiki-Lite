@@ -298,7 +298,7 @@ sub list_block {
                     pop @{$stash->{_indent}};
                 }
                 my $end_tag = join "\n", map { "</$_>" } @end_tags;
-                $stash->{NEXT_LINE} = $line;
+                $stash->{__NEXT_LINE__} = $line;
                 $line = $end_tag;
                 $ret = 1;
             }

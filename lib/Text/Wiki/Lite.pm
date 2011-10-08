@@ -16,6 +16,9 @@ use Class::Accessor::Lite (
     rw  => [qw/escape_func/],
 );
 
+sub true  () { 1 == 1 }
+sub false () { 0 == 1 }
+
 sub new {
     my ($class, %opts) = @_;
     bless {
@@ -27,7 +30,7 @@ sub new {
 }
 
 sub format {
-    my ($self, $text) = @_;
+    my ($self, $text, $opts) = @_; # TOOD filehandle
 
     my $filters       = $self->filters;
     my $inlines       = $self->inlines;
@@ -54,6 +57,7 @@ sub format {
     $self->{out} = my $out = Text::Wiki::Lite::Output->new;
     $text =~ s/\r\n/\n/msg;
     for my $line (split(/\n/, $text), $new_line) {
+#        chomp $line;
 #        for my $filter (@$filters) { ... }
 LOOP:
         my $current_block = $block_map->{$current_state};
@@ -119,7 +123,7 @@ LOOP:
                     my $line = shift;
                     return unless $parent_block;
                     (undef, my $ret) = $parent_block->end($line, $parent_stash);
-                    $current_stash->{NEXT_LINE} = $line if $ret;
+                    $current_stash->{__NEXT_LINE__} = $line if $ret;
                     $ret;
                 });
             }
