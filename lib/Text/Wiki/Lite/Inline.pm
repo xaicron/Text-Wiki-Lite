@@ -17,7 +17,15 @@ sub ident {
 
 sub parse {
     my ($self, $line) = @_;
-    return $self->{code}->($line);
+    return $self->{code}->($self, $line);
+}
+
+sub wiki {
+    shift->{wiki};
+}
+
+sub output {
+    shift->{wiki}->output;
 }
 
 1;

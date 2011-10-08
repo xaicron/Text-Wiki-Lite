@@ -41,8 +41,15 @@ sub format {
     my $parent_block;
 
     my $block_map = {
-        map { refaddr($_) => $_ } @$blocks, $default_block
+        map {
+            $_->{wiki} = $self;
+            refaddr($_) => $_;
+        } @$blocks, $default_block
     };
+
+    for my $inline (@$inlines) {
+        $inline->{wiki} = $self;
+    }
 
     $self->{out} = my $out = Text::Wiki::Lite::Output->new;
     $text =~ s/\r\n/\n/msg;
@@ -99,10 +106,12 @@ LOOP:
                     last if $ret;
                 }
                 if ($ret) {
-                    $block->between($line, $current_stash, sub {
-                        $current_stash->{NEXT_LINE} = $line;
-                        1;
+                    $block->set_parent_cb(sub {
+                        $current_stash->{__NEXT_LINE__} = $line;
+                        return true;
                     });
+                    $block->between($line, $current_stash);
+                    $block->remove_parent_cb;
                 }
             }
             unless ($ret) {
