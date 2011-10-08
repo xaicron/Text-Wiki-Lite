@@ -162,6 +162,8 @@ sub table_block {
         foldline => 1,
     };
 
+    my $class = $opts->{class} || {};
+
     my $th_syntax;
     if (ref $syntax eq 'ARRAY') {
         ($syntax, $th_syntax) = map _syntax($_), @$syntax;
@@ -170,37 +172,38 @@ sub table_block {
         $syntax = _syntax($syntax);
     }
 
+    my $replacer = sub {
+        my $matched = shift;
+        $matched =~ s/^\s+|\s+$//g;
+        my $result;
+        if ($th_syntax && $matched =~ s/^$th_syntax//) {
+            $result = _class('th', $class->{th})."$matched</th>";
+        }
+        else {
+            $result = _class('td', $class->{td})."matched</td>";
+        }
+        return "$result\n";
+    };
+
+    my $check   = qr/^($syntax.*)$syntax$/;
+    my $prepare = qr/$syntax((?:(?!$syntax).)*)/;
+
     return {
         start => sub {
             my ($c, $line, $stash) = @_;
             my $ret;
-            if ($line =~ s/^($syntax.*)$syntax$/$1/) {
-                $line =~ s#$syntax((?:(?!$syntax).)*)#
-                    my $matched = $1;
-                    $matched =~ s/^\s+|\s+$//g;
-                    my $result;
-                    if ($th_syntax && $matched =~ s/^$th_syntax//) {
-                        $result = "<th>$matched</th>";
-                    }
-                    else {
-                        $result = "<td>$matched</td>";
-                    }
-                    "$result\n";
-                #ge;
-                $line = "<table>\n<tr>\n$line</tr>";
+            if ($line =~ s/$check/$1/) {
+                $line =~ s#$prepare#$replacer->($1)#ge;
+                $line = _class('table', $class->{table})."\n"._class('tr', $class->{tr})."\n$line</tr>";
                 $ret = 1;
             }
             return $line, $ret;
         },
         between => sub {
             my ($c, $line, $stash) = @_;
-            if ($line =~ s/^($syntax.*)$syntax$/$1/) {
-                $line =~ s#$syntax\s*((?:(?!$syntax).)*)\s*#
-                    my $matched = $1;
-                    $matched =~ s/^\s*|\s*$//g;
-                    "<td>$matched</td>\n";
-                #ge;
-                $line = "<tr>\n$line</tr>";
+            if ($line =~ s/$check/$1/) {
+                $line =~ s#$prepare#$replacer->($1)#ge;
+                $line = _class('tr', $class->{tr}) ."\n$line</tr>";
                 $stash->{finished} = 0;
             }
             elsif ($c->parent_cb->($line)) {
@@ -371,6 +374,11 @@ sub _make_tag {
 sub _syntax {
     my $syntax = shift;
     return ref $syntax eq 'Regexp' ? $$syntax : quotemeta $syntax;
+}
+
+sub _class {
+    my ($tag, $class) = @_;
+    sprintf '<%s%s>', $tag, $class ? qq{ class="$class"} : '';
 }
 
 1;
