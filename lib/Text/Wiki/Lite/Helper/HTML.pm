@@ -10,6 +10,7 @@ our @EXPORT = qw(
     inline inline_exclusive 
     simple_block line_block hr_block
     table_block list_block default_block
+    filter_block
 );
 
 sub inline {
@@ -99,6 +100,45 @@ sub simple_block {
         end => sub {
             my ($c, $line) = @_;
             my $ret = $line =~ s#^$end$#$end_tag# ? 1 : 0;
+            return $line, $ret;
+        },
+        %$opts,
+    };
+}
+
+sub filter_block {
+    my ($start, $end, $tag, $filter_cb, $opts) = @_;
+    $opts = {
+        %{ $opts || {} },
+        foldline => 1,
+    };
+
+    $start = _syntax($start);
+    $end   = _syntax($end);
+    my ($start_tag, $end_tag) = _make_tag($tag);
+
+    return +{
+        start => sub {
+            my ($c, $line) = @_;
+            my $ret = $line =~ s#^$start$#$start_tag# ? 1 : 0;
+            return $line, $ret;
+        },
+        between => sub {
+            my ($c, $line, $stash) = @_;
+            $stash->{lines} ||= [];
+            unless ($line =~ /^$end/) {
+                push @{$stash->{lines}}, $line;
+            }
+            return $line;
+        },
+        end => sub {
+            my ($c, $line, $stash) = @_;
+            my $ret = $line =~ s#^$end$#$end_tag# ? 1 : 0;
+            if ($ret) {
+                my $lines = delete $stash->{lines};
+                $c->stack->pop for 1..@$lines; # remove stacked lines
+                $line = $filter_cb->($c, $lines) . $line;
+            }
             return $line, $ret;
         },
         %$opts,
