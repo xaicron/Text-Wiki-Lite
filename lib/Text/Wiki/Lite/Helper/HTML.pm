@@ -220,7 +220,7 @@ sub table_block {
             $result = _class('th', $class->{th})."$matched</th>";
         }
         else {
-            $result = _class('td', $class->{td})."matched</td>";
+            $result = _class('td', $class->{td})."$matched</td>";
         }
         return "$result\n";
     };
@@ -265,7 +265,7 @@ sub table_block {
 }
 
 sub list_block {
-    my ($syntax, $tag) = @_;
+    my ($syntax, $tag, $opts) = @_;
 
     my $start_tag_map = {};
     my @regexp;
@@ -348,7 +348,8 @@ sub list_block {
             return $line, $ret;
         },
         foldline => 1,
-        enabled_inline => 1,
+        inline => 1,
+        %{ $opts || {} },
     };
 }
 
