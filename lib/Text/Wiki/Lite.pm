@@ -3,7 +3,7 @@ package Text::Wiki::Lite;
 use strict;
 use warnings;
 use 5.008_001;
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use Text::Wiki::Lite::Output;
 use Text::Wiki::Lite::Inline;
