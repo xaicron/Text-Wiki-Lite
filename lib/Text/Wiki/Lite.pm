@@ -47,7 +47,7 @@ sub format {
         map {
             $_->{wiki} = $self;
             refaddr($_) => $_;
-        } @$blocks, $default_block
+        } @$blocks, $default_block ? $default_block : ()
     };
 
     for my $inline (@$inlines) {
@@ -151,7 +151,9 @@ ENDBLOCK:
         LAST: $out->push($line);
     }
 
-    return $out->join("\n");
+    my $result = $out->join("\n");
+    chomp $result;
+    return $result;
 }
 
 sub add_filter {
