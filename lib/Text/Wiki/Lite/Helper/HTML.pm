@@ -220,7 +220,7 @@ sub table_block {
             $result = _class('th', $class->{th})."$matched</th>";
         }
         else {
-            $result = _class('td', $class->{td})."matched</td>";
+            $result = _class('td', $class->{td})."$matched</td>";
         }
         return "$result\n";
     };
@@ -265,7 +265,9 @@ sub table_block {
 }
 
 sub list_block {
-    my ($syntax, $tag) = @_;
+    my ($syntax, $tag, $opts) = @_;
+
+    my ($s_tag, $e_tag) = _make_tag($tag);
 
     my $start_tag_map = {};
     my @regexp;
@@ -290,7 +292,7 @@ sub list_block {
             if ($line =~ s/^(\s*)($syntax) (.*)/$3/) {
                 $stash->{indent} = length $1 || 0;
                 my $start_tag = $stash->{start_tag} = $find_start_tag->($2);
-                $line = "<$start_tag>\n<$tag>$line</$tag>";
+                $line = "<$start_tag>\n${s_tag}${line}${e_tag}";
                 $ret = 1;
             }
             return $line, $ret;
@@ -302,7 +304,7 @@ sub list_block {
                 my $start_tag = $find_start_tag->($2);
                 my $text = $3;
                 if ($stash->{indent} < $current_indent) {
-                    $line = "<$start_tag>\n<$tag>$text</$tag>";
+                    $line = "<$start_tag>\n${s_tag}${text}${e_tag}";
                     push @{$stash->{_indent}}, $stash->{indent};
                     push @{$stash->{_start_tag}}, $start_tag;
                     $stash->{indent} = $current_indent;
@@ -319,11 +321,11 @@ sub list_block {
                         }
                     }
                     my $end_tag = join '', map { "</$_>\n" } @end_tags;
-                    $line = "$end_tag<$tag>$text</$tag>";
+                    $line = "${end_tag}${s_tag}${text}${e_tag}";
                     $stash->{indent} = $current_indent;
                 }
                 else {
-                    $line = "<$tag>$text</$tag>";
+                    $line = "${s_tag}${text}${e_tag}";
                 }
             }
             else {
@@ -348,7 +350,8 @@ sub list_block {
             return $line, $ret;
         },
         foldline => 1,
-        enabled_inline => 1,
+        inline => 1,
+        %{ $opts || {} },
     };
 }
 
