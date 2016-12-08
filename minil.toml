@@ -1,0 +1,6 @@
+name = "Text-Wiki-Lite"
+# badges = ["travis"]
+authority="cpan:XAICRON"
+
+module_maker="ModuleBuildTiny"
+

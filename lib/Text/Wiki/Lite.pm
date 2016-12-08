@@ -206,7 +206,7 @@ __END__
 
 =head1 NAME
 
-Text::Wiki::Lite -
+Text::Wiki::Lite - my wikilike formatter
 
 =head1 SYNOPSIS
 
